@@ -19,17 +19,20 @@
   <h3>Résultats</h3>
   <ul id="list"></ul>
 
+  <div id="editFormContainer" style="display:none; border:1px solid #ccc; padding:10px; margin-top:10px;">
+    <h3>Modifier la release</h3>
+    <input id="editGame" placeholder="Game"><br>
+    <input id="editPublisher" placeholder="Publisher"><br>
+    <input id="editDeveloper" placeholder="Developer"><br>
+    <button onclick="submitEdit()">Valider</button>
+    <button onclick="closeEditForm()">Annuler</button>
+  </div>
+
   <script>
     async function search() {
       const q = document.getElementById("search").value;
-
-      console.log("Requête envoyée :", `/releases?q=${q}`);
-
       const res = await fetch(`/releases?q=${q}`);
       const data = await res.json();
-
-      console.log("Résultat reçu :", data);
-
       display(data);
     }
 
@@ -47,15 +50,37 @@
       search();
     }
 
-    async function updateRelease(id) {
-      const name = prompt("Nouveau nom :");
-      if (!name) return;
-      await fetch(`/releases/${id}`, {
+    // Modifier : ouvrir le formulaire
+    function updateRelease(item) {
+    currentEditId = item._id;
+    document.getElementById("editGame").value = item.game || "";
+    document.getElementById("editPublisher").value = item.publisher || "";
+    document.getElementById("editDeveloper").value = item.developer || "";
+    document.getElementById("editFormContainer").style.display = "block";
+    }
+
+    // Fermer le formulaire
+    function closeEditForm() {
+    currentEditId = null;
+    document.getElementById("editFormContainer").style.display = "none";
+    }
+
+    // Soumettre modification
+    async function submitEdit() {
+    const data = {
+        game: document.getElementById("editGame").value,
+        publisher: document.getElementById("editPublisher").value,
+        developer: document.getElementById("editDeveloper").value
+    };
+
+    await fetch(`/releases/${currentEditId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
-      });
-      search();
+        body: JSON.stringify(data)
+    });
+
+    closeEditForm();
+    search();
     }
 
     async function deleteRelease(id) {
@@ -69,8 +94,8 @@
       releases.forEach(i => {
         list.innerHTML += `
           <li>
-            ${i.game}
-            <button onclick="updateRelease('${i._id}')">Modifier</button>
+            ${i.game} - ${i.publisher || ""} - ${i.developer || ""}
+            <button onclick='updateRelease(${JSON.stringify(i)})'>Modifier</button>
             <button onclick="deleteRelease('${i._id}')">Supprimer</button>
           </li>`;
       });
