@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD + Search</title>
+</head>
+<body>
+  <h1>Base CRUD + MongoDB</h1>
+
+  <input id="search" placeholder="Recherche..." />
+  <button onclick="search()">Rechercher</button>
+
+  <h3>Ajouter une release</h3>
+  <input id="newGame" placeholder="Game" />
+  <input id="newPublisher" placeholder="Publisher" />
+  <input id="newDeveloper" placeholder="Developer" />
+  <button onclick="addRelease()">Ajouter</button>
+
+  <h3>Résultats</h3>
+  <ul id="list"></ul>
+
+  <script>
+    async function search() {
+      const q = document.getElementById("search").value;
+      const res = await fetch(`/releases?q=${q}`);
+      const data = await res.json();
+      display(data);
+    }
+
+    async function addRelease() {
+      const data = {
+        game: document.getElementById("newGame").value,
+        publisher: document.getElementById("newPublisher").value,
+        developer: document.getElementById("newDeveloper").value
+      };
+      await fetch("/releases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      search();
+    }
+
+    async function updateRelease(id) {
+      const name = prompt("Nouveau nom :");
+      if (!name) return;
+      await fetch(`/releases/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+      search();
+    }
+
+    async function deleteRelease(id) {
+      await fetch(`/releases/${id}`, { method: "DELETE" });
+      search();
+    }
+
+    function display(releases) {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      releases.forEach(i => {
+        list.innerHTML += `
+          <li>
+            ${i.name}
+            <button onclick="updateRelease('${i._id}')">Modifier</button>
+            <button onclick="deleteRelease('${i._id}')">Supprimer</button>
+          </li>`;
+      });
+    }
+
+    search();
+  </script>
+</body>
+</html>
