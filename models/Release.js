@@ -14,4 +14,4 @@ const ReleaseSchema = new mongoose.Schema({
   all_time_peak: Number
 });
 
-module.exports = mongoose.model("Release", ReleaseSchema);
+module.exports = mongoose.model("Release", ReleaseSchema, "steam_releases");

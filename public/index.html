@@ -22,8 +22,14 @@
   <script>
     async function search() {
       const q = document.getElementById("search").value;
+
+      console.log("Requête envoyée :", `/releases?q=${q}`);
+
       const res = await fetch(`/releases?q=${q}`);
       const data = await res.json();
+
+      console.log("Résultat reçu :", data);
+
       display(data);
     }
 
@@ -63,7 +69,7 @@
       releases.forEach(i => {
         list.innerHTML += `
           <li>
-            ${i.name}
+            ${i.game}
             <button onclick="updateRelease('${i._id}')">Modifier</button>
             <button onclick="deleteRelease('${i._id}')">Supprimer</button>
           </li>`;

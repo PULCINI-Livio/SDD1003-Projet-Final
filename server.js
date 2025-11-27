@@ -11,7 +11,7 @@ app.use(express.static("public"));
 
 // Connexion MongoDB Atlas
 mongoose.connect(
-  "mongodb+srv://liviopulcini_db_user:VxUuSxhqjM6SefAI@cluster0.b2yzikb.mongodb.net/?appName=Cluster0"
+  "mongodb+srv://liviopulcini_db_user:VxUuSxhqjM6SefAI@cluster0.b2yzikb.mongodb.net/TP1?retryWrites=true&w=majority"
 ).then(() => console.log("MongoDB connecté"))
  .catch(err => console.log(err));
 
@@ -19,19 +19,21 @@ mongoose.connect(
 // CRUD API
 app.get("/releases", async (req, res) => {
   const q = req.query.q || "";
-  const releases = await Release.find({ name: { $regex: q, $options: "i" } });
+  const releases = await Release.find({ 
+    game: { $regex: q, $options: "i" } })
+    .limit(10);
   res.json(releases);
 });
 
 app.post("/releases", async (req, res) => {
-  const newRelease = await Release.create({ name: req.body.name });
+  const newRelease = await Release.create(req.body);
   res.json(newRelease);
 });
 
 app.put("/releases/:id", async (req, res) => {
   const updated = await Release.findByIdAndUpdate(
     req.params.id,
-    { name: req.body.name },
+    req.body,
     { new: true }
   );
   res.json(updated);
