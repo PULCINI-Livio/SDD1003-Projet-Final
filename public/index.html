@@ -34,7 +34,7 @@
 
   <!-- FORMULAIRE EDIT -->
   <div id="editFormContainer"
-    class="hidden mt-6 p-4 bg-white shadow rounded border w-80">
+    class="hidden absolute bg-white p-4 rounded shadow border w-full">
     <h3 class="text-lg font-semibold mb-3">Modifier la release</h3>
 
     <input id="editGame" placeholder="Game"
@@ -58,7 +58,7 @@
       </button>
     </div>
   </div>
-  
+
   <!-- LISTE DES RELEASES -->
   <ul id="list" class="space-y-3"></ul>
 
@@ -84,19 +84,33 @@
       search();
     }
 
+    //let currentEditId = null;
+
     // Modifier : ouvrir le formulaire
-    function updateRelease(item) {
-      currentEditId = item._id;
+    function updateRelease(item, id) {
+      const form = document.getElementById("editFormContainer");
+
+      // Remplir les champs
       document.getElementById("editGame").value = item.game || "";
       document.getElementById("editPublisher").value = item.publisher || "";
       document.getElementById("editDeveloper").value = item.developer || "";
-      document.getElementById("editFormContainer").style.display = "block";
+
+      // Récupérer le LI correspondant
+      const li = document.getElementById("li-" + id);
+      const rect = li.getBoundingClientRect();
+
+      // Positionner le formulaire juste en dessous
+      form.style.top = window.scrollY + rect.bottom + "px";
+      form.style.left = rect.left + "px";
+
+      form.classList.remove("hidden");
+      currentEditId = id;
     }
 
     // Fermer le formulaire
     function closeEditForm() {
       currentEditId = null;
-      document.getElementById("editFormContainer").style.display = "none";
+      document.getElementById("editFormContainer").classList.add("hidden");
     }
 
     // Soumettre modification
@@ -127,7 +141,7 @@
       list.innerHTML = "";
       releases.forEach(i => {
         list.innerHTML += `
-          <li class="bg-white p-4 rounded shadow flex justify-between items-center">
+          <li id="li-${i._id}" class="bg-white p-4 rounded shadow flex justify-between items-center">
             <div>
               <span class="font-semibold">${i.game}</span><br>
               <span class="text-sm text-gray-600">Publisher : ${i.publisher || ""}</span><br>
@@ -135,7 +149,7 @@
             </div>
 
             <div class="flex gap-2">
-              <button onclick='updateRelease(${JSON.stringify(i)})'
+              <button onclick='updateRelease(${JSON.stringify(i)}, "${i._id}")'
                 class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 shadow">
                 Modifier
               </button>
