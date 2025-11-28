@@ -2,31 +2,65 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>CRUD + Search</title>
+  <title>SDD1003-Projet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Base CRUD + MongoDB</h1>
+<body class="bg-gray-100 p-10 text-gray-900">
+  <h1 class="text-3xl font-bold mb-6">Steam Releases Explorer</h1>
 
-  <input id="search" placeholder="Recherche..." />
-  <button onclick="search()">Rechercher</button>
-
-  <h3>Ajouter une release</h3>
-  <input id="newGame" placeholder="Game" />
-  <input id="newPublisher" placeholder="Publisher" />
-  <input id="newDeveloper" placeholder="Developer" />
-  <button onclick="addRelease()">Ajouter</button>
-
-  <h3>Résultats</h3>
-  <ul id="list"></ul>
-
-  <div id="editFormContainer" style="display:none; border:1px solid #ccc; padding:10px; margin-top:10px;">
-    <h3>Modifier la release</h3>
-    <input id="editGame" placeholder="Game"><br>
-    <input id="editPublisher" placeholder="Publisher"><br>
-    <input id="editDeveloper" placeholder="Developer"><br>
-    <button onclick="submitEdit()">Valider</button>
-    <button onclick="closeEditForm()">Annuler</button>
+  <!-- RECHERCHE -->
+  <div class="mb-6 flex gap-2">
+    <input id="search" placeholder="Recherche..." 
+      class="px-3 py-2 border rounded w-64 shadow-sm">
+    <button onclick="search()"
+      class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow">
+      Rechercher
+    </button>
   </div>
+
+  <!-- AJOUT -->
+  <h2 class="text-xl font-semibold mb-2">Ajouter une release</h2>
+  <div class="flex gap-2 mb-6">
+    <input id="newGame" placeholder="Game" class="px-3 py-2 border rounded shadow-sm">
+    <input id="newPublisher" placeholder="Publisher" class="px-3 py-2 border rounded shadow-sm">
+    <input id="newDeveloper" placeholder="Developer" class="px-3 py-2 border rounded shadow-sm">
+    
+    <button onclick="addRelease()"
+      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow">
+      Ajouter</button>
+  </div>
+
+
+
+  <!-- FORMULAIRE EDIT -->
+  <div id="editFormContainer"
+    class="hidden mt-6 p-4 bg-white shadow rounded border w-80">
+    <h3 class="text-lg font-semibold mb-3">Modifier la release</h3>
+
+    <input id="editGame" placeholder="Game"
+      class="w-full mb-2 px-3 py-2 border rounded shadow-sm">
+
+    <input id="editPublisher" placeholder="Publisher"
+      class="w-full mb-2 px-3 py-2 border rounded shadow-sm">
+
+    <input id="editDeveloper" placeholder="Developer"
+      class="w-full mb-4 px-3 py-2 border rounded shadow-sm">
+
+    <div class="flex gap-2">
+      <button onclick="submitEdit()"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow">
+        Valider
+      </button>
+
+      <button onclick="closeEditForm()"
+        class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 shadow">
+        Annuler
+      </button>
+    </div>
+  </div>
+  
+  <!-- LISTE DES RELEASES -->
+  <ul id="list" class="space-y-3"></ul>
 
   <script>
     async function search() {
@@ -93,11 +127,26 @@
       list.innerHTML = "";
       releases.forEach(i => {
         list.innerHTML += `
-          <li>
-            ${i.game} - ${i.publisher || ""} - ${i.developer || ""}
-            <button onclick='updateRelease(${JSON.stringify(i)})'>Modifier</button>
-            <button onclick="deleteRelease('${i._id}')">Supprimer</button>
-          </li>`;
+          <li class="bg-white p-4 rounded shadow flex justify-between items-center">
+            <div>
+              <span class="font-semibold">${i.game}</span><br>
+              <span class="text-sm text-gray-600">Publisher : ${i.publisher || ""}</span><br>
+              <span class="text-sm text-gray-600">Developer : ${i.developer || ""}</span>
+            </div>
+
+            <div class="flex gap-2">
+              <button onclick='updateRelease(${JSON.stringify(i)})'
+                class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 shadow">
+                Modifier
+              </button>
+
+              <button onclick="deleteRelease('${i._id}')"
+                class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 shadow">
+                Supprimer
+              </button>
+            </div>
+          </li>
+        `;
       });
     }
 
