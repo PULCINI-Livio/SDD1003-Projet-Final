@@ -52,35 +52,35 @@
 
     // Modifier : ouvrir le formulaire
     function updateRelease(item) {
-    currentEditId = item._id;
-    document.getElementById("editGame").value = item.game || "";
-    document.getElementById("editPublisher").value = item.publisher || "";
-    document.getElementById("editDeveloper").value = item.developer || "";
-    document.getElementById("editFormContainer").style.display = "block";
+      currentEditId = item._id;
+      document.getElementById("editGame").value = item.game || "";
+      document.getElementById("editPublisher").value = item.publisher || "";
+      document.getElementById("editDeveloper").value = item.developer || "";
+      document.getElementById("editFormContainer").style.display = "block";
     }
 
     // Fermer le formulaire
     function closeEditForm() {
-    currentEditId = null;
-    document.getElementById("editFormContainer").style.display = "none";
+      currentEditId = null;
+      document.getElementById("editFormContainer").style.display = "none";
     }
 
     // Soumettre modification
     async function submitEdit() {
-    const data = {
-        game: document.getElementById("editGame").value,
-        publisher: document.getElementById("editPublisher").value,
-        developer: document.getElementById("editDeveloper").value
-    };
+      const data = {
+          game: document.getElementById("editGame").value,
+          publisher: document.getElementById("editPublisher").value,
+          developer: document.getElementById("editDeveloper").value
+      };
 
-    await fetch(`/releases/${currentEditId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
+      await fetch(`/releases/${currentEditId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+      });
 
-    closeEditForm();
-    search();
+      closeEditForm();
+      search();
     }
 
     async function deleteRelease(id) {
