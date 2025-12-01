@@ -8,6 +8,8 @@
 <body class="bg-gray-100 p-10 text-gray-900">
   <h1 class="text-3xl font-bold mb-6">Steam Releases Explorer</h1>
 
+  <div id="dbStatus" class="p-2 text-sm font-semibold"></div>
+
   <!-- RECHERCHE -->
   <div class="mb-6 flex gap-2">
     <input id="searchInput" type="text" placeholder="Recherche..." 
@@ -23,7 +25,9 @@
     <input id="newGame" placeholder="Game" class="px-3 py-2 border rounded shadow-sm">
     <input id="newPublisher" placeholder="Publisher" class="px-3 py-2 border rounded shadow-sm">
     <input id="newDeveloper" placeholder="Developer" class="px-3 py-2 border rounded shadow-sm">
-    
+    <input id="newRating" placeholder="Rating" class="px-3 py-2 border rounded shadow-sm">
+    <input id="newPrimaryGenre" placeholder="PrimaryGenre" class="px-3 py-2 border rounded shadow-sm">
+
     <button onclick="addRelease()"
       class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow">
       Ajouter</button>
@@ -43,6 +47,12 @@
       class="w-full mb-2 px-3 py-2 border rounded shadow-sm">
 
     <input id="editDeveloper" placeholder="Developer"
+      class="w-full mb-4 px-3 py-2 border rounded shadow-sm">
+
+    <input id="editRating" placeholder="Rating"
+      class="w-full mb-4 px-3 py-2 border rounded shadow-sm">
+
+    <input id="editPrimaryGenre" placeholder="PrimaryGenre"
       class="w-full mb-4 px-3 py-2 border rounded shadow-sm">
 
     <div class="flex gap-2">
@@ -79,7 +89,9 @@
       const data = {
         game: document.getElementById("newGame").value,
         publisher: document.getElementById("newPublisher").value,
-        developer: document.getElementById("newDeveloper").value
+        developer: document.getElementById("newDeveloper").value,
+        rating: document.getElementById("newRating").value,
+        primary_genre: document.getElementById("newPrimaryGenre").value
       };
       await fetch("/releases", {
         method: "POST",
@@ -91,6 +103,8 @@
       document.getElementById("newGame").value = "";
       document.getElementById("newPublisher").value = "";
       document.getElementById("newDeveloper").value = "";
+      document.getElementById("newRating").value = "";
+      document.getElementById("newPrimaryGenre").value = "";
       search();
     }
 
@@ -104,6 +118,8 @@
       document.getElementById("editGame").value = item.game || "";
       document.getElementById("editPublisher").value = item.publisher || "";
       document.getElementById("editDeveloper").value = item.developer || "";
+      document.getElementById("editRating").value = item.Rating || "";
+      document.getElementById("editPrimaryGenre").value = item.primary_genre || "";
 
       // Récupérer le LI correspondant
       const li = document.getElementById("li-" + id);
@@ -128,7 +144,9 @@
       const data = {
           game: document.getElementById("editGame").value,
           publisher: document.getElementById("editPublisher").value,
-          developer: document.getElementById("editDeveloper").value
+          developer: document.getElementById("editDeveloper").value,
+          rating: document.getElementById("editRating").value,
+          primary_genre: document.getElementById("editPrimaryGenre").value
       };
 
       await fetch(`/releases/${currentEditId}`, {
@@ -155,7 +173,9 @@
             <div>
               <span class="font-semibold">${i.game}</span><br>
               <span class="text-sm text-gray-600">Publisher : ${i.publisher || ""}</span><br>
-              <span class="text-sm text-gray-600">Developer : ${i.developer || ""}</span>
+              <span class="text-sm text-gray-600">Developer : ${i.developer || ""}</span><br>
+              <span class="text-sm text-gray-600">Rating : ${i.rating || ""}</span><br>
+              <span class="text-sm text-gray-600">Primary Genre : ${i.primary_genre || ""}</span>
             </div>
 
             <div class="flex gap-2">
@@ -182,7 +202,9 @@
           <div>
             <span class="font-semibold">${release.game}</span><br>
             <span class="text-sm text-gray-600">Publisher : ${release.publisher || ""}</span><br>
-            <span class="text-sm text-gray-600">Developer : ${release.developer || ""}</span>
+            <span class="text-sm text-gray-600">Developer : ${release.developer || ""}</span><br>
+            <span class="text-sm text-gray-600">Rating : ${release.rating || ""}</span><br>
+            <span class="text-sm text-gray-600">Primary Genre : ${release.primary_genre || ""}</span>
           </div>
 
           <div class="flex gap-2">
@@ -278,9 +300,22 @@
       display(list); // Ta fonction existante qui affiche plusieurs releases
     }
 
+    async function checkDB() {
+      const res = await fetch("/db-status");
+      const data = await res.json();
 
+      const dbDiv = document.getElementById("dbStatus");
 
-    search();
+      if (data.connected) {
+        dbDiv.textContent = "Base de données connectée";
+        dbDiv.classList.add("text-green-600");
+      } else {
+        dbDiv.textContent = "Base de données NON connectée";
+        dbDiv.classList.add("text-red-600");
+      }
+    }
+
+    checkDB(); // appel immédiat au chargement
   </script>
 </body>
 </html>

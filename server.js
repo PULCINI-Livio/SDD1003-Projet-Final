@@ -55,6 +55,18 @@ app.get("/releases/:id", async (req, res) => {
   res.json(item);
 });
 
+app.get("/db-status", (req, res) => {
+  const state = mongoose.connection.readyState;
+
+  // 1 = connecté
+  if (state === 1) {
+    return res.json({ connected: true });
+  }
+
+  res.json({ connected: false });
+});
+
+
 // POST
 app.post("/releases", async (req, res) => {
   const newRelease = await Release.create(req.body);
