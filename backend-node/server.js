@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const Release = require("./models/Release");
+const Release = require("../models/Release");
 
 const app = express();
 app.use(cors());
@@ -10,10 +10,10 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 
 // Connexion MongoDB Atlas
-mongoose.connect(
-  "mongodb+srv://liviopulcini_db_user:VxUuSxhqjM6SefAI@cluster0.b2yzikb.mongodb.net/TP1?retryWrites=true&w=majority"
-).then(() => console.log("MongoDB connecté"))
- .catch(err => console.log(err));
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connecté"))
+  .catch(err => console.log(err));
 
 
 // CRUD API //
