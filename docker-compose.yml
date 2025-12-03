@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  node-service:
+    build: ./backend-node
+    container_name: my-node-app
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - python-worker
+
+  python-worker:
+    build: ./worker-python
+    container_name: my-python-worker
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
