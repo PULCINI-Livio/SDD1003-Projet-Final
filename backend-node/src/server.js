@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const Release = require("../models/Release");
+const Release = require("./models/Release.js");
 
 const app = express();
 app.use(cors());
