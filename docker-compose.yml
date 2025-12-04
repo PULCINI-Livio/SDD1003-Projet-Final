@@ -15,3 +15,5 @@ services:
     container_name: my-python-worker
     environment:
       - MONGODB_URI=${MONGODB_URI}
+    volumes:
+      - ./worker-python:/app

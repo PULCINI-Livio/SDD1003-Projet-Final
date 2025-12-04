@@ -1,24 +1,53 @@
 from sentence_transformers import SentenceTransformer
+from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
+import numpy as np
 
-# 1. Load a pretrained Sentence Transformer model
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Charger le .env
+load_dotenv()
 
-# The sentences to encode
-sentences = [
-    "Call of Duty",
-    "Call of Juarez: Bound in Blood",
-    "S.T.A.L.K.E.R.: Call of Pripyat",
-]
+# Récupérer l'URI depuis le .env
+MONGO_URI = os.getenv("MONGODB_URI")
 
-# 2. Calculate embeddings by calling model.encode()
-embeddings = model.encode(sentences)
-print(embeddings.shape)
-# [3, 384]
+if not MONGO_URI:
+    raise Exception("MONGODB_URI n'est pas défini dans le .env !")
 
-print(embeddings[0])
-# 3. Calculate the embedding similarities
-similarities = model.similarity(embeddings, embeddings)
-print(similarities)
-# tensor([[1.0000, 0.6660, 0.1046],
-#         [0.6660, 1.0000, 0.1411],
-#         [0.1046, 0.1411, 1.0000]])
+# Connexion MongoDB
+client = MongoClient(MONGO_URI)
+db = client["TP1"]                 
+collection = db["steam_releases"]        
+
+print("hello")
+
+# Récupérer tous les documents
+documents = list(collection.find({}))
+total = len(documents)
+print(f"{total} documents chargés.")
+
+# Charger le modèle d'embedding
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+# Générer les embeddings et mettre à jour
+for i, doc in enumerate(documents, 1):
+    title = doc.get("game", "")
+    if not title:
+        continue  # on ignore les titres vides
+
+    # générer l’embedding
+    vector = model.encode(title).tolist()  # liste 384 floats
+
+    # mise à jour du document
+    collection.update_one(
+        {"_id": doc["_id"]},
+        {"$set": {"embedding": vector}}
+    )
+
+    # Progress bar simple
+    percent = int(i / total * 100)
+    bar_length = 30
+    filled_length = int(bar_length * i // total)
+    bar = "█" * filled_length + "-" * (bar_length - filled_length)
+    print(f"\rProgress : |{bar}| {percent}% ({i}/{total})", end="", flush=True)
+
+print("\nEmbeddings ajoutés avec succès !")
