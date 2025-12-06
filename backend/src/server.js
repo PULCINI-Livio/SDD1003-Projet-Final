@@ -146,8 +146,7 @@ app.post("/vector-search", async (req, res) => {
             numCandidates: 100,
             limit: 10
           }
-        },
-        { $project: { game: 1, _id: 1 } }
+        }
       ]);
 
       return res.json(results);
