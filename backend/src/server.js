@@ -24,6 +24,42 @@ mongoose
   .then(() => console.log("MongoDB connecté"))
   .catch(err => console.log(err));
 
+// GENERATEUR D'EMBEDDING //
+const generateEmbedding = (text) => {
+  return new Promise((resolve, reject) => {
+    const pythonScriptPath = path.join(__dirname, "../python/generate_embedding.py");
+
+    const py = spawn("python3", [pythonScriptPath, text]);
+    let output = "";
+    let errorOutput = "";
+
+    py.stdout.on("data", (data) => output += data.toString());
+    py.stderr.on("data", (data) => errorOutput += data.toString());
+
+    py.on("close", () => {
+      if (errorOutput.trim()) {
+        return reject(new Error("Python error: " + errorOutput));
+      }
+
+      if (!output.trim()) {
+        return reject(new Error("Python returned empty output"));
+      }
+
+      try {
+        const parsed = JSON.parse(output);
+
+        if (parsed.error) {
+          return reject(new Error("Embedding generation failed: " + parsed.error));
+        }
+
+        resolve(parsed);
+
+      } catch (err) {
+        reject(new Error("Invalid JSON from Python: " + output));
+      }
+    });
+  });
+};
 
 // CRUD API //
 
@@ -78,9 +114,29 @@ app.get("/db-status", (req, res) => {
 
 // POST
 app.post("/releases", async (req, res) => {
-  const newRelease = await Release.create(req.body);
-  res.json(newRelease);
+  try {
+    const releaseData = req.body;
+
+    if (!releaseData.game || !releaseData.game.trim()) {
+      return res.status(400).json({ error: "The field 'game' (title) is required" });
+    }
+
+    const embedding = await generateEmbedding(releaseData.game);
+
+    // Ajouter l'embedding au document
+    releaseData.embedding = embedding;
+
+    // Enregistrer la release
+    const newRelease = await Release.create(releaseData);
+
+    res.json(newRelease);
+
+  } catch (err) {
+    console.error("Error creating release:", err);
+    res.status(500).json({ error: "Failed to create release" });
+  }
 });
+
 
 app.post("/vector-search", async (req, res) => {
   const { query } = req.body;
@@ -89,74 +145,29 @@ app.post("/vector-search", async (req, res) => {
     return res.status(400).json({ error: "Query text is required" });
   }
 
-  const pythonScriptPath = path.join(__dirname, "../python/generate_embedding.py");
-  // 1. Exécuter le script Python pour générer l'embedding
-  const py = spawn("python3", [pythonScriptPath, query]);
+  try {
+    const embedding = await generateEmbedding(query);
 
-  let output = "";
-  let errorOutput = "";
-
-  // stdout → données JSON
-  py.stdout.on("data", (data) => {
-    output += data.toString();
-  });
-
-  // stderr → erreurs Python
-  py.stderr.on("data", (data) => {
-    errorOutput += data.toString();
-  });
-
-  py.on("close", async () => {
-    // Si le script a écrit dans stderr → log + erreur
-    if (errorOutput.trim()) {
-      console.error("Python error:", errorOutput);
-      return res.status(500).json({ error: "Python embedding error", details: errorOutput });
-    }
-
-    // Si aucune donnée → erreur
-    if (!output.trim()) {
-      console.error("Python returned empty output");
-      return res.status(500).json({ error: "Python returned empty output" });
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(output);
-    } catch (err) {
-      console.error("Invalid JSON returned by Python:", output);
-      return res.status(500).json({ error: "Invalid JSON from Python", raw: output });
-    }
-
-    // Si Python a renvoyé {"error": "..."}
-    if (parsed.error) {
-      console.error("Embedding generation failed:", parsed);
-      return res.status(500).json({ error: "Embedding generation failed", details: parsed });
-    }
-
-    const embedding = parsed;
-
-    // 2. Requête vectorielle MongoDB
-    try {
-      const results = await Release.aggregate([
-        {
-          $vectorSearch: {
-            index: "vector_index",
-            path: "embedding",
-            queryVector: embedding,
-            numCandidates: 100,
-            limit: 10
-          }
+    const results = await Release.aggregate([
+      {
+        $vectorSearch: {
+          index: "vector_index",
+          path: "embedding",
+          queryVector: embedding,
+          numCandidates: 100,
+          limit: 10
         }
-      ]);
+      }
+    ]);
 
-      return res.json(results);
+    res.json(results);
 
-    } catch (err) {
-      console.error("MongoDB vector search error:", err);
-      return res.status(500).json({ error: "MongoDB vector search failed" });
-    }
-  });
+  } catch (err) {
+    console.error("Vector search error:", err);
+    res.status(500).json({ error: "Vector search failed" });
+  }
 });
+
 
 
 
