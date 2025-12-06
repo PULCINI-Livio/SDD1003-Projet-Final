@@ -245,18 +245,18 @@
     searchInput.addEventListener("keyup", async (e) => {
       const value = searchInput.value.trim();
 
-      // 1️⃣ Entrée → lancer la recherche principale
+      // Entrée -> lancer la recherche principale
       if (e.key === "Enter") {
         if (value === "") return showFirstTen();
         return runSearch(value);
       }
 
-      // 2️⃣ Espace sur champ vide → afficher les 10 premiers
+      // Espace sur champ vide -> afficher les 10 premiers
       if (e.key === " " && value === "") {
         return showFirstTen();
       }
 
-      // 3️⃣ Autocomplétion si > 1 caractère
+      // Autocomplétion si > 1 caractère
       if (value.length > 1) {
         const res = await fetch(`/releases/autocomplete?q=${value}`);
         const suggestions = await res.json();
