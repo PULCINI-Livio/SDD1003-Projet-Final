@@ -11,7 +11,11 @@ const ReleaseSchema = new mongoose.Schema({
   primary_genre: String,
   publisher: String,
   developer: String,
-  all_time_peak: Number
+  all_time_peak: Number,
+  embedding: {
+    type: [Number],   
+    default: []       // obligatoire sinon Mongoose peut l’ignorer
+  }
 });
 
 module.exports = mongoose.model("Release", ReleaseSchema, "steam_releases");
