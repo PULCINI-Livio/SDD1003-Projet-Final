@@ -23,7 +23,7 @@ try:
     # Encoder en vecteur
     embedding = model.encode(text).tolist()
 
-    # Sortie JSON **obligatoire**
+    # Sortie JSON
     print(json.dumps(embedding))
     sys.stdout.flush()
 
