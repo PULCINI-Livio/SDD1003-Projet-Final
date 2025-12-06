@@ -26,7 +26,12 @@ RUN pip install --no-cache-dir \
       sentence-transformers \
       pymongo \
       numpy \
-      python-dotenv
+      python-dotenv \
+      scikit-learn \
+      xgboost \
+      matplotlib \
+      seaborn \
+      pandas
 
 # Exposer le port Node.js
 EXPOSE 3000
