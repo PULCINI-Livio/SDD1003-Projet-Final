@@ -1,19 +1,10 @@
-version: "3.8"
+version: "3.9"
+
 services:
-  node-service:
-    build: ./backend-node
-    container_name: my-node-app
-    environment:
-      - MONGODB_URI=${MONGODB_URI}
+  app:
+    build: .
     ports:
       - "3000:3000"
-    depends_on:
-      - python-worker
-
-  python-worker:
-    build: ./worker-python
-    container_name: my-python-worker
-    environment:
-      - MONGODB_URI=${MONGODB_URI}
-    volumes:
-      - ./worker-python:/app
+    env_file:
+      - .env
+    restart: unless-stopped
