@@ -9,6 +9,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
+const { spawn } = require("child_process");
+
 // Connexion MongoDB Atlas
 mongoose
   .connect(process.env.MONGODB_URI)
@@ -72,6 +74,42 @@ app.post("/releases", async (req, res) => {
   const newRelease = await Release.create(req.body);
   res.json(newRelease);
 });
+
+
+
+app.post("/vector-search", async (req, res) => {
+  const { query } = req.body;
+  if (!query) return res.json([]);
+
+  // 1. Appel Python pour générer l'embedding
+  const py = spawn("python", ["generate_embedding.py", query]);
+
+  let embeddingData = "";
+  py.stdout.on("data", (data) => {
+    embeddingData += data.toString();
+  });
+
+  py.on("close", async () => {
+    const embedding = JSON.parse(embeddingData);
+
+    // 2. Requête MongoDB vectorielle
+    const results = await Release.aggregate([
+      {
+        $vectorSearch: {
+          index: "vector_index",
+          path: "embedding",
+          queryVector: embedding,
+          numCandidates: 100,
+          limit: 10
+        }
+      },
+      { $project: { game: 1, _id: 1 } } // ne récupérer que les titres et id
+    ]);
+
+    res.json(results);
+  });
+});
+
 
 // PUT
 app.put("/releases/:id", async (req, res) => {

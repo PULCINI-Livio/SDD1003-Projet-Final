@@ -19,6 +19,10 @@
      class="absolute bg-white border rounded shadow mt-1 hidden w-full z-10">
   </div>
 
+  <!-- RECHERCHE VECTORIELLE -->
+  <input id="vectorSearchInput" placeholder="Recherche vectorielle de release..." class="border p-2 rounded w-full">
+  <div id="vectorResults" class="mt-4"></div>
+
   <!-- AJOUT -->
   <h2 class="text-xl font-semibold mb-2">Ajouter une release</h2>
   <div class="flex gap-2 mb-6">
@@ -314,6 +318,37 @@
         dbDiv.classList.add("text-red-600");
       }
     }
+    
+    document.getElementById("vectorSearchInput").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const query = e.target.value.trim();
+        if (!query) return;
+
+        const res = await fetch("/vector-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query })
+        });
+
+        const results = await res.json();
+        displayVectorResults(results); // fonction pour afficher
+      }
+    });
+
+    function displayVectorResults(results) {
+      const container = document.getElementById("vectorResults");
+      if (!results.length) {
+        container.innerHTML = "<p>Aucun résultat trouvé.</p>";
+        return;
+      }
+
+      container.innerHTML = results.map(r => `
+        <div class="p-2 border-b">
+          <strong>${r.game}</strong>
+        </div>
+      `).join("");
+    }
+
 
     checkDB(); // appel immédiat au chargement
   </script>
