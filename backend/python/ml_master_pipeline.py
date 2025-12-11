@@ -51,9 +51,9 @@ def main():
     # If no train provided try to fetch from Mongo
     if train is None:
         train = load_from_mongo_if_needed()
-        if train is None:
+        #if train is None:
             # fallback: use candidates as training
-            train = candidates
+        #    train = candidates
 
     timestamp = int(time.time())
     # create per-run subdir for charts to avoid overwriting
