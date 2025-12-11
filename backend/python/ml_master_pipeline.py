@@ -28,7 +28,7 @@ def load_from_mongo_if_needed():
         client = MongoClient(uri)
         db_name = os.getenv("MONGODB_DBNAME") or client.list_database_names()[0]
         db = client[db_name]
-        coll_name = os.getenv("MONGODB_COLLECTION") or "releases"
+        coll_name = os.getenv("MONGODB_COLLECTION") or "steam_releases"
         coll = db[coll_name]
         docs = list(coll.find({}, {"game":1, "embedding":1, "primary_genre":1, "rating":1}))
         return docs
@@ -52,7 +52,7 @@ def main():
     if train is None:
         train = load_from_mongo_if_needed()
         if train is None:
-            # fallback: use candidates as training (not ideal)
+            # fallback: use candidates as training
             train = candidates
 
     timestamp = int(time.time())
