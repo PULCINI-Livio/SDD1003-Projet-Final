@@ -324,6 +324,7 @@
         const query = e.target.value.trim();
         if (!query) return;
 
+        // Recherche vectorielle MongoDB
         const res = await fetch("/vector-search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -331,7 +332,24 @@
         });
 
         const results = await res.json();
-        display(results); // fonction pour afficher
+
+        // Afficher les résultats normalement
+        display(results);
+
+        // Lancer le post-traitement ML
+        console.log("Launching ML postprocess...");
+
+        const mlRes = await fetch("/ml/postprocess", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ candidates: results })
+        });
+
+        const mlOutput = await mlRes.json();
+        console.log("ML postprocess results:", mlOutput);
+
+        // Indiquer que les graphiques sont prêts
+        alert("Analyses ML terminées - graphiques générés dans le dossier charts.");
       }
     });
 

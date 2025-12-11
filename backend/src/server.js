@@ -1,22 +1,22 @@
 require('dotenv').config();
 const express = require("express");
+const app = express();
 const path = require("path");
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
 const cors = require("cors");
 const Release = require("./models/Release.js");
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
 const { spawn } = require("child_process");
+const fs = require("fs");
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 // Servir le front-end
 app.use(express.static(path.join(__dirname, "../../frontend"))); // chemin depuis server.js
 
-// Endpoint exemple pour le test
-app.get("/test", (req, res) => res.send("Backend OK"));
+// Servir le dossier charts statiquement
+app.use("/charts", express.static(path.join(__dirname, "../python/charts")));
 
 // Connexion MongoDB Atlas
 mongoose
@@ -168,6 +168,62 @@ app.post("/vector-search", async (req, res) => {
   }
 });
 
+app.post("/ml/postprocess", async (req, res) => {
+  const candidates = req.body.candidates;
+  if (!candidates || !Array.isArray(candidates) || candidates.length === 0) {
+    return res.status(400).json({ error: "Candidates array is required" });
+  }
+
+  const pythonScriptPath = path.join(__dirname, "../python/ml_master_pipeline.py");
+  const py = spawn("python3", [pythonScriptPath]);
+
+  let outputData = "";
+  let errorData = "";
+
+  // Écrire le JSON candidates dans stdin de Python
+  py.stdin.write(JSON.stringify({ candidates }));
+  py.stdin.end();
+
+  py.stdout.on("data", (data) => {
+    outputData += data.toString();
+  });
+
+  py.stderr.on("data", (data) => {
+    errorData += data.toString();
+  });
+
+  py.on("close", (code) => {
+    if (errorData) {
+      console.error("Python error:", errorData);
+      return res.status(500).json({ error: "Python ML error", details: errorData });
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(outputData);
+    } catch (err) {
+      console.error("Invalid JSON from Python:", outputData);
+      return res.status(500).json({ error: "Invalid JSON from Python", raw: outputData });
+    }
+
+    // Vérifie que les chemins de graphiques existent
+    if (parsed.charts_dir && fs.existsSync(parsed.charts_dir)) {
+      parsed.charts = {
+        classification: fs.existsSync(path.join(parsed.charts_dir, "classification.png"))
+          ? `/charts/${path.basename(parsed.charts_dir)}/classification.png`
+          : null,
+        regression: fs.existsSync(path.join(parsed.charts_dir, "regression.png"))
+          ? `/charts/${path.basename(parsed.charts_dir)}/regression.png`
+          : null,
+        clustering: fs.existsSync(path.join(parsed.charts_dir, "clustering.png"))
+          ? `/charts/${path.basename(parsed.charts_dir)}/clustering.png`
+          : null
+      };
+    }
+
+    res.json(parsed);
+  });
+});
 
 
 
